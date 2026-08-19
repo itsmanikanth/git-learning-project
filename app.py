@@ -1,1 +1,1 @@
-print("Git learning project started")
+print("Welcome to Git practical learning")
