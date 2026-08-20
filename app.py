@@ -1,1 +1,1 @@
-print("Welcome to Git practical learning")
+print("Welcome to Git tutorial")
