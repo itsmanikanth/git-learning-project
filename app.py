@@ -1,1 +1,3 @@
-print("Welcome to Git tutorial")
+print("Welcome to Git practical learning")
+print("Login feature development started")
+print("Login security enhancement completed")
