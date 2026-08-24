@@ -10,8 +10,8 @@ on:
       - main
 
 env:
-  APP_ENV: testing
-  APP_NAME: git-learning-project
+  APP_ENV: ${{ vars.APP_ENV }}
+  APP_NAME: ${{ vars.APP_NAME }}
 
 jobs:
   test:
