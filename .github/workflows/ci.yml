@@ -1,12 +1,21 @@
-name: First GitHub Actions Workflow
+name: CI
 
 on:
   push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  first-job:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Print message
-        run: echo "Hello from GitHub Actions"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run application
+        run: python app.py
