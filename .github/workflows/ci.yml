@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main
+
 env:
   APP_ENV: testing
   APP_NAME: git-learning-project
@@ -33,18 +34,18 @@ jobs:
 
       - name: Run tests
         run: pytest
-      
+
       - name: Show configuration
         run: |
           echo "Application: $APP_NAME"
           echo "Environment: $APP_ENV"
-        
-       - name: Show GitHub information
-         run: |
-           echo "Repository: $GITHUB_REPOSITORY"
-           echo "Branch/ref: $GITHUB_REF"
-           echo "Commit: $GITHUB_SHA"
-           echo "Actor: $GITHUB_ACTOR"
+
+      - name: Show GitHub information
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Branch/ref: $GITHUB_REF"
+          echo "Commit: $GITHUB_SHA"
+          echo "Actor: $GITHUB_ACTOR"
 
   application:
     needs: test
@@ -61,7 +62,7 @@ jobs:
 
       - name: Run application
         run: python app.py
-      
+
       - name: Show configuration
         run: |
           echo "Application: $APP_NAME"
