@@ -47,6 +47,17 @@ jobs:
           echo "Commit: $GITHUB_SHA"
           echo "Actor: $GITHUB_ACTOR"
 
+      - name: Check secret availability
+        env:
+          DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
+        run: |
+          if [ -n "$DEMO_SECRET" ]; then
+            echo "Secret is available"
+          else
+            echo "Secret is missing"
+            exit 1
+          fi
+
   application:
     needs: test
     runs-on: ubuntu-latest
