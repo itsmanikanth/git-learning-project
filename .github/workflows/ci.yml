@@ -105,6 +105,9 @@ jobs:
       - name: Always available step
         run: echo "This step always runs"
 
+      - name: Show ref
+        run: echo "GITHUB_REF=$GITHUB_REF"
+
       - name: Main branch step
         if: github.ref == 'refs/heads/main'
         run: echo "This is the main branch"
