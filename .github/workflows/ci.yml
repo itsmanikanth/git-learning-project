@@ -14,7 +14,7 @@ env:
   APP_NAME: ${{ vars.APP_NAME }}
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,132 +25,36 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Check Python version
-        run: python --version
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: python -m pip install -r requirements.txt
 
       - name: Run tests
-        run: pytest
+        run: python -m pytest
 
-      - name: Show configuration
+      - name: Create test report
         run: |
-          echo "Application: $APP_NAME"
-          echo "Environment: $APP_ENV"
+          echo "CI Test Report" > test-report.txt
+          echo "All tests passed" >> test-report.txt
+          echo "Repository: $GITHUB_REPOSITORY" >> test-report.txt
+          echo "Commit: $GITHUB_SHA" >> test-report.txt
 
-      - name: Show GitHub information
-        run: |
-          echo "Repository: $GITHUB_REPOSITORY"
-          echo "Branch/ref: $GITHUB_REF"
-          echo "Commit: $GITHUB_SHA"
-          echo "Actor: $GITHUB_ACTOR"
-
-      - name: Check branch
-        run: |
-          echo "Current ref: ${{ github.ref }}"
-          echo "Is main branch: ${{ github.ref == 'refs/heads/main' }}"
-
-      - name: Run only on main
-        if: github.ref == 'refs/heads/main'
-        run: echo "This is the main branch"
-
-      - name: Run only on feature branch
-        if: github.ref != 'refs/heads/main'
-        run: echo "This is not the main branch"
-
-      - name: Always run this step
-        run: echo "This step always runs"
-
-      - name: Show GitHub ref
-        run: echo "GITHUB_REF=$GITHUB_REF"
-
-      - name: Check secret availability
-        env:
-          DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
-        run: |
-          if [ -n "$DEMO_SECRET" ]; then
-            echo "Secret is available"
-          else
-            echo "Secret is missing"
-            exit 1
-          fi
-
-  application:
-    needs: test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
         with:
-          python-version: "3.12"
+          name: ci-test-report
+          path: test-report.txt
+          retention-days: 7
 
-      - name: Run application
-        run: python app.py
-
-      - name: Show configuration
-        run: |
-          echo "Application: $APP_NAME"
-          echo "Environment: $APP_ENV"
-
-  condition-practice:
+  report:
+    needs: build-and-test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Always available step
-        run: echo "This step always runs"
+      - name: Download test report
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-test-report
 
-      - name: Show ref
-        run: echo "GITHUB_REF=$GITHUB_REF"
-
-      - name: Main branch step
-        if: github.ref == 'refs/heads/main'
-        run: echo "This is the main branch"
-
-      - name: Feature branch step
-        if: github.ref != 'refs/heads/main'
-        run: echo "This is NOT the main branch"
-
-      - name: Another normal step
-        run: echo "Another normal step"
-
-  job-condition-practice:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Job started
-        run: echo "The entire job is running"
-
-      - name: Second step
-        run: echo "Second step is running"
-    
-  status-practice:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Successful step
-        run: echo "Step 1 succeeded"
-
-      - name: Run after success
-        if: success()
-        run: echo "success() is TRUE"
-
-      - name: Deliberately fail
-        run: exit 1
-
-      - name: Run after failure
-        if: failure()
-        run: echo "failure() is TRUE"
-
-      - name: Always run
-        if: always()
-        run: echo "always() is TRUE"
-
-      - name: Normal step after failure
-        run: echo "This should be skipped"
+      - name: Display test report
+        run: cat test-report.txt
