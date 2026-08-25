@@ -130,27 +130,42 @@ jobs:
       - name: Second step
         run: echo "Second step is running"
     
-  status-practice:
+  multiple-artifacts:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Successful step
-        run: echo "Step 1 succeeded"
+      - name: Create output directory
+        run: mkdir -p output
 
-      - name: Run after success
-        if: success()
-        run: echo "success() is TRUE"
+      - name: Create test results
+        run: |
+          echo "All tests passed" > output/test-results.txt
 
-      - name: Deliberately fail
-        run: exit 1
+      - name: Create coverage report
+        run: |
+          echo "Coverage: 95%" > output/coverage.txt
 
-      - name: Run after failure
-        if: failure()
-        run: echo "failure() is TRUE"
+      - name: Create application log
+        run: |
+          echo "Application started successfully" > output/application.log
 
-      - name: Always run
-        if: always()
-        run: echo "always() is TRUE"
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: output/test-results.txt
+          retention-days: 8
 
-      - name: Normal step after failure
-        run: echo "This should be skipped"
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: output/coverage.txt
+          retention-days: 14
+
+      - name: Upload application logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-logs
+          path: output/application.log
+          retention-days: 16
