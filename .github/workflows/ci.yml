@@ -149,3 +149,17 @@ jobs:
         with:
           name: test-report
           path: test-report.txt
+
+
+  artifact-report:
+    needs: artifact-practice
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download test report
+        uses: actions/download-artifact@v4
+        with:
+          name: test-report
+
+      - name: Display downloaded report
+        run: cat test-report.txt
