@@ -97,6 +97,38 @@ jobs:
         run: |
           echo "Application: $APP_NAME"
           echo "Environment: $APP_ENV"
+
+  condition-practice:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Always available step
+        run: echo "This step always runs"
+
+      - name: Show ref
+        run: echo "GITHUB_REF=$GITHUB_REF"
+
+      - name: Main branch step
+        if: github.ref == 'refs/heads/main'
+        run: echo "This is the main branch"
+
+      - name: Feature branch step
+        if: github.ref != 'refs/heads/main'
+        run: echo "This is NOT the main branch"
+
+      - name: Another normal step
+        run: echo "Another normal step"
+
+  job-condition-practice:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Job started
+        run: echo "The entire job is running"
+
+      - name: Second step
+        run: echo "Second step is running"
     
   context-practice:
     runs-on: ubuntu-latest
