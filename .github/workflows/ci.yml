@@ -159,7 +159,7 @@ jobs:
 
           - python-version: "3.12"
             environment: "current"
-        include:
+
           - python-version: "3.13"
             environment: "experimental"
 
