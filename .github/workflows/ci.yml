@@ -98,27 +98,26 @@ jobs:
           echo "Application: $APP_NAME"
           echo "Environment: $APP_ENV"
     
-  status-practice:
+  context-practice:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Successful step
-        run: echo "Step 1 succeeded"
+      - name: Show GitHub context
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
 
-      - name: Run after success
-        if: success()
-        run: echo "success() is TRUE"
+      - name: Show runner context
+        run: |
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Runner architecture: ${{ runner.arch }}"
 
-      - name: Deliberately fail
-        run: exit 1
-
-      - name: Run after failure
-        if: failure()
-        run: echo "failure() is TRUE"
-
-      - name: Always run
-        if: always()
-        run: echo "always() is TRUE"
-
-      - name: Normal step after failure
-        run: echo "This should be skipped"
+      - name: Show environment context
+        run: |
+          echo "APP_ENV: ${{ env.APP_ENV }}"
+          echo "APP_NAME: ${{ env.APP_NAME }}"
