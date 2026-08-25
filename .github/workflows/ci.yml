@@ -52,6 +52,20 @@ jobs:
           echo "Current ref: ${{ github.ref }}"
           echo "Is main branch: ${{ github.ref == 'refs/heads/main' }}"
 
+      - name: Run only on main
+        if: github.ref == 'refs/heads/main'
+        run: echo "This is the main branch"
+
+      - name: Run only on feature branch
+        if: github.ref != 'refs/heads/main'
+        run: echo "This is not the main branch"
+
+      - name: Always run this step
+        run: echo "This step always runs"
+
+      - name: Show GitHub ref
+        run: echo "GITHUB_REF=$GITHUB_REF"
+
       - name: Check secret availability
         env:
           DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
