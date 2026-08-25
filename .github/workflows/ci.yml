@@ -9,13 +9,77 @@ on:
     branches:
       - main
 
+env:
+  APP_ENV: ${{ vars.APP_ENV }}
+  APP_NAME: ${{ vars.APP_NAME }}
+
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check Python version
+        run: python --version
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest
+
+      - name: Show configuration
+        run: |
+          echo "Application: $APP_NAME"
+          echo "Environment: $APP_ENV"
+
+      - name: Show GitHub information
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Branch/ref: $GITHUB_REF"
+          echo "Commit: $GITHUB_SHA"
+          echo "Actor: $GITHUB_ACTOR"
+
+      - name: Check branch
+        run: |
+          echo "Current ref: ${{ github.ref }}"
+          echo "Is main branch: ${{ github.ref == 'refs/heads/main' }}"
+
+      - name: Check secret availability
+        env:
+          DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
+        run: |
+          if [ -n "$DEMO_SECRET" ]; then
+            echo "Secret is available"
+          else
+            echo "Secret is missing"
+            exit 1
+          fi
+
+  application:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Run application
         run: python app.py
+
+      - name: Show configuration
+        run: |
+          echo "Application: $APP_NAME"
+          echo "Environment: $APP_ENV"
