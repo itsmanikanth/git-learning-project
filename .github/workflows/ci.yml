@@ -15,9 +15,6 @@ env:
 
 jobs:
 
-  # --------------------------------------------------
-  # Job 1: Normal CI test job
-  # --------------------------------------------------
   test:
     runs-on: ubuntu-latest
 
@@ -81,9 +78,6 @@ jobs:
             exit 1
           fi
 
-  # --------------------------------------------------
-  # Job 2: Application
-  # --------------------------------------------------
   application:
     needs: test
     runs-on: ubuntu-latest
@@ -105,9 +99,6 @@ jobs:
           echo "Application: $APP_NAME"
           echo "Environment: $APP_ENV"
 
-  # --------------------------------------------------
-  # Job 3: Step-level condition practice
-  # --------------------------------------------------
   condition-practice:
     runs-on: ubuntu-latest
 
@@ -129,9 +120,6 @@ jobs:
       - name: Another normal step
         run: echo "Another normal step"
 
-  # --------------------------------------------------
-  # Job 4: Job-level condition practice
-  # --------------------------------------------------
   job-condition-practice:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -143,9 +131,6 @@ jobs:
       - name: Second step
         run: echo "Second step is running"
 
-  # --------------------------------------------------
-  # Job 5: Reusable workflow practice
-  # --------------------------------------------------
   reusable-test:
     uses: ./.github/workflows/reusable-test.yml
     with:
