@@ -14,6 +14,10 @@ env:
   APP_NAME: ${{ vars.APP_NAME }}
 
 jobs:
+
+  # --------------------------------------------------
+  # 1. TEST JOB
+  # --------------------------------------------------
   test:
     runs-on: ubuntu-latest
 
@@ -30,10 +34,10 @@ jobs:
         run: python --version
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: python -m pip install -r requirements.txt
 
       - name: Run tests
-        run: pytest
+        run: python -m pytest
 
       - name: Show configuration
         run: |
@@ -77,6 +81,9 @@ jobs:
             exit 1
           fi
 
+  # --------------------------------------------------
+  # 2. APPLICATION JOB
+  # --------------------------------------------------
   application:
     needs: test
     runs-on: ubuntu-latest
@@ -98,6 +105,9 @@ jobs:
           echo "Application: $APP_NAME"
           echo "Environment: $APP_ENV"
 
+  # --------------------------------------------------
+  # 3. STEP CONDITIONS PRACTICE
+  # --------------------------------------------------
   condition-practice:
     runs-on: ubuntu-latest
 
@@ -119,6 +129,9 @@ jobs:
       - name: Another normal step
         run: echo "Another normal step"
 
+  # --------------------------------------------------
+  # 4. JOB CONDITION PRACTICE
+  # --------------------------------------------------
   job-condition-practice:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -129,28 +142,36 @@ jobs:
 
       - name: Second step
         run: echo "Second step is running"
-    
-  status-practice:
+
+  # --------------------------------------------------
+  # 5. REUSABLE WORKFLOW
+  # --------------------------------------------------
+  reusable-test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      python-version: "3.13"
+      environment: "testing"
+    secrets:
+      demo-secret: ${{ secrets.DEMO_SECRET }}
+
+  # --------------------------------------------------
+  # 6. STEP OUTPUT PRACTICE
+  # --------------------------------------------------
+  step-output-practice:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Successful step
-        run: echo "Step 1 succeeded"
 
-      - name: Run after success
-        if: success()
-        run: echo "success() is TRUE"
+      - name: Generate application version
+        id: version
+        run: echo "version=1.0.5" >> "$GITHUB_OUTPUT"
 
-      - name: Deliberately fail
-        run: exit 1
+      - name: Read version
+        run: echo "Application version is ${{ steps.version.outputs.version }}"
 
-      - name: Run after failure
-        if: failure()
-        run: echo "failure() is TRUE"
+      - name: Generate environment
+        id: environment
+        run: echo "environment=testing" >> "$GITHUB_OUTPUT"
 
-      - name: Always run
-        if: always()
-        run: echo "always() is TRUE"
-
-      - name: Normal step after failure
-        run: echo "This should be skipped"
+      - name: Read environment
+        run: echo "Application environment is ${{ steps.environment.outputs.environment }}"
