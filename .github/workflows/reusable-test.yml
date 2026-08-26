@@ -13,21 +13,9 @@ on:
         type: string
         default: "testing"
 
-    secrets:
-      DEMO_SECRET:
-        required: true
-
-    outputs:
-      test-result:
-        description: "Result of the Python test"
-        value: ${{ jobs.test.outputs.test-result }}
-
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    outputs:
-      test-result: ${{ steps.result.outputs.test-result }}
 
     steps:
       - name: Checkout code
@@ -47,25 +35,13 @@ jobs:
           python-version: ${{ inputs.python-version }}
 
       - name: Check Python version
-        run: python --version
+        run: |
+          python --version
 
       - name: Install dependencies
-        run: python -m pip install -r requirements.txt
+        run: |
+          python -m pip install -r requirements.txt
 
       - name: Run tests
-        run: python -m pytest
-
-      - name: Check reusable workflow secret
-        env:
-          DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
         run: |
-          if [ -n "$DEMO_SECRET" ]; then
-            echo "Secret successfully received by reusable workflow"
-          else
-            echo "Secret was not received"
-            exit 1
-          fi
-
-      - name: Set test result
-        id: result
-        run: echo "test-result=passed" >> "$GITHUB_OUTPUT"
+          python -m pytest
