@@ -130,27 +130,5 @@ jobs:
       - name: Second step
         run: echo "Second step is running"
     
-  status-practice:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Successful step
-        run: echo "Step 1 succeeded"
-
-      - name: Run after success
-        if: success()
-        run: echo "success() is TRUE"
-
-      - name: Deliberately fail
-        run: exit 1
-
-      - name: Run after failure
-        if: failure()
-        run: echo "failure() is TRUE"
-
-      - name: Always run
-        if: always()
-        run: echo "always() is TRUE"
-
-      - name: Normal step after failure
-        run: echo "This should be skipped"
+  reusable-test:
+    uses: ./.github/workflows/reusable-test.yml
