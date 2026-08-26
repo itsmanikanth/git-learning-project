@@ -13,6 +13,9 @@ env:
   APP_ENV: ${{ vars.APP_ENV }}
   APP_NAME: ${{ vars.APP_NAME }}
 
+permissions:
+  contents: read
+
 jobs:
 
   test:
