@@ -13,8 +13,14 @@ env:
   APP_ENV: ${{ vars.APP_ENV }}
   APP_NAME: ${{ vars.APP_NAME }}
 
+permissions:
+  contents: read
+
 jobs:
 
+  # --------------------------------------------------
+  # TEST JOB
+  # --------------------------------------------------
   test:
     runs-on: ubuntu-latest
 
@@ -55,11 +61,11 @@ jobs:
 
       - name: Run only on main
         if: github.ref == 'refs/heads/main'
-        run: echo "This is the main branch"
+        run: echo "This is the main branch."
 
       - name: Run only on feature branch
         if: github.ref != 'refs/heads/main'
-        run: echo "This is not the main branch"
+        run: echo "This is not the main branch."
 
       - name: Always run this step
         run: echo "This step always runs"
@@ -78,6 +84,9 @@ jobs:
             exit 1
           fi
 
+  # --------------------------------------------------
+  # APPLICATION JOB
+  # --------------------------------------------------
   application:
     needs: test
     runs-on: ubuntu-latest
@@ -99,6 +108,9 @@ jobs:
           echo "Application: $APP_NAME"
           echo "Environment: $APP_ENV"
 
+  # --------------------------------------------------
+  # CONDITION PRACTICE
+  # --------------------------------------------------
   condition-practice:
     runs-on: ubuntu-latest
 
@@ -120,6 +132,9 @@ jobs:
       - name: Another normal step
         run: echo "Another normal step"
 
+  # --------------------------------------------------
+  # JOB CONDITION PRACTICE
+  # --------------------------------------------------
   job-condition-practice:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -131,6 +146,9 @@ jobs:
       - name: Second step
         run: echo "Second step is running"
 
+  # --------------------------------------------------
+  # REUSABLE WORKFLOW
+  # --------------------------------------------------
   reusable-test:
     uses: ./.github/workflows/reusable-test.yml
     with:
@@ -139,11 +157,56 @@ jobs:
     secrets:
       DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
 
-  show-reusable-result:
-    needs: reusable-test
+  # --------------------------------------------------
+  # GITHUB TOKEN PRACTICE
+  # --------------------------------------------------
+  github-token-practice:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
-      - name: Show reusable workflow result
+      - name: Check GITHUB_TOKEN availability
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Reusable workflow result: ${{ needs.reusable-test.outputs.test-result }}"
+          if [ -n "$GH_TOKEN" ]; then
+            echo "GITHUB_TOKEN is available"
+          else
+            echo "GITHUB_TOKEN is missing"
+            exit 1
+          fi
+
+      - name: Show token permission model
+        run: |
+          echo "GITHUB_TOKEN is automatically provided by GitHub Actions."
+          echo "Repository contents permission: read"
+
+      - name: Check repository using GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh repo view "$GITHUB_REPOSITORY" \
+            --json name,owner \
+            --jq '"Repository: \(.owner.login)/\(.name)"'
+
+  # --------------------------------------------------
+  # PRODUCTION ENVIRONMENT PROTECTION PRACTICE
+  # --------------------------------------------------
+  production-protection-practice:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+
+    steps:
+      - name: Show environment
+        run: |
+          echo "Environment: production"
+          echo "Deployment branch: ${{ github.ref_name }}"
+
+      - name: Simulate deployment
+        run: |
+          echo "Production deployment approved."
+          echo "Simulating production deployment..."
