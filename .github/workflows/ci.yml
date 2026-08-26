@@ -224,4 +224,3 @@ jobs:
         run: |
           echo "Reusable workflow result:"
           echo "${{ needs.reusable-test.outputs.test-result }}"
-```
