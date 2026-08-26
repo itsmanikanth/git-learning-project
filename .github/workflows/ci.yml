@@ -131,7 +131,7 @@ jobs:
         run: echo "Second step is running"
     
   reusable-test:
-  uses: ./.github/workflows/reusable-test.yml
-  with:
-    python-version: "3.12"
-    environment: "testing"
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      python-version: "3.13"
+      environment: "testing"

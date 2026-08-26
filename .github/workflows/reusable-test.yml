@@ -8,10 +8,10 @@ on:
         type: string
         default: "3.12"
 
-  environment:
-    required: false
-    type: string
-    default: "testing"
+      environment:
+        required: false
+        type: string
+        default: "testing"
 
 jobs:
   test:
