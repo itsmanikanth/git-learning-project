@@ -15,6 +15,9 @@ env:
 
 jobs:
 
+  # --------------------------------------------------
+  # TEST JOB
+  # --------------------------------------------------
   test:
     runs-on: ubuntu-latest
 
@@ -78,6 +81,9 @@ jobs:
             exit 1
           fi
 
+  # --------------------------------------------------
+  # APPLICATION JOB
+  # --------------------------------------------------
   application:
     needs: test
     runs-on: ubuntu-latest
@@ -99,6 +105,9 @@ jobs:
           echo "Application: $APP_NAME"
           echo "Environment: $APP_ENV"
 
+  # --------------------------------------------------
+  # CONDITION PRACTICE
+  # --------------------------------------------------
   condition-practice:
     runs-on: ubuntu-latest
 
@@ -120,6 +129,9 @@ jobs:
       - name: Another normal step
         run: echo "Another normal step"
 
+  # --------------------------------------------------
+  # JOB CONDITION PRACTICE
+  # --------------------------------------------------
   job-condition-practice:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -131,19 +143,31 @@ jobs:
       - name: Second step
         run: echo "Second step is running"
 
+  # --------------------------------------------------
+  # REUSABLE WORKFLOW
+  # --------------------------------------------------
   reusable-test:
     uses: ./.github/workflows/reusable-test.yml
     with:
       python-version: "3.13"
       environment: "testing"
-    secrets:
-      DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
 
-  show-reusable-result:
-    needs: reusable-test
+  # --------------------------------------------------
+  # STEP OUTPUT PRACTICE
+  # --------------------------------------------------
+  step-output-practice:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show reusable workflow result
+      - name: Generate application version
+        id: version
         run: |
-          echo "Reusable workflow result: ${{ needs.reusable-test.outputs.test-result }}"
+          echo "version=1.2.5" >> "$GITHUB_OUTPUT"
+
+      - name: Display application version
+        run: |
+          echo "Application version is: ${{ steps.version.outputs.version }}"
+
+      - name: Use version in another step
+        run: |
+          echo "Preparing deployment for version ${{ steps.version.outputs.version }}"
