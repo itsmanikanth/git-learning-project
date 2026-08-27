@@ -225,3 +225,33 @@ jobs:
         run: |
           echo "Deploying application to staging..."
           echo "Deployment successful."
+
+  # --------------------------------------------------
+  # PRODUCTION DEPLOYMENT
+  # --------------------------------------------------
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    environment:
+      name: production
+
+    steps:
+      - name: Download deployment package
+        uses: actions/download-artifact@v4
+        with:
+          name: application-package
+          path: deployment-package
+
+      - name: Show downloaded package
+        run: |
+          echo "Production deployment package:"
+          ls -la deployment-package
+
+      - name: Simulate production deployment
+        run: |
+          echo "Deploying application to production..."
+          echo "Production deployment successful."
