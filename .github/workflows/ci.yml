@@ -15,8 +15,14 @@ env:
 
 jobs:
 
+  # --------------------------------------------------
+  # TEST JOB
+  # --------------------------------------------------
   test:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -59,7 +65,7 @@ jobs:
 
       - name: Run only on feature branch
         if: github.ref != 'refs/heads/main'
-        run: echo "This is not the main branch"
+        run: echo "This is NOT the main branch"
 
       - name: Always run this step
         run: echo "This step always runs"
@@ -78,9 +84,15 @@ jobs:
             exit 1
           fi
 
+  # --------------------------------------------------
+  # APPLICATION JOB
+  # --------------------------------------------------
   application:
     needs: test
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -99,8 +111,14 @@ jobs:
           echo "Application: $APP_NAME"
           echo "Environment: $APP_ENV"
 
+  # --------------------------------------------------
+  # CONDITION PRACTICE
+  # --------------------------------------------------
   condition-practice:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     steps:
       - name: Always available step
@@ -120,9 +138,15 @@ jobs:
       - name: Another normal step
         run: echo "Another normal step"
 
+  # --------------------------------------------------
+  # JOB CONDITION PRACTICE
+  # --------------------------------------------------
   job-condition-practice:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     steps:
       - name: Job started
@@ -131,19 +155,105 @@ jobs:
       - name: Second step
         run: echo "Second step is running"
 
+  # --------------------------------------------------
+  # REUSABLE WORKFLOW
+  # --------------------------------------------------
   reusable-test:
     uses: ./.github/workflows/reusable-test.yml
     with:
       python-version: "3.13"
       environment: "testing"
-    secrets:
-      DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
 
-  show-reusable-result:
-    needs: reusable-test
+  # --------------------------------------------------
+  # BUILD JOB
+  # --------------------------------------------------
+  build:
+    needs: test
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
-      - name: Show reusable workflow result
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create deployment package
         run: |
-          echo "Reusable workflow result: ${{ needs.reusable-test.outputs.test-result }}"
+          mkdir deployment-package
+          cp app.py deployment-package/
+          cp requirements.txt deployment-package/
+          cp README.md deployment-package/
+
+      - name: List deployment package
+        run: |
+          echo "Deployment package contents:"
+          ls -la deployment-package
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-package
+          path: deployment-package/
+
+  # --------------------------------------------------
+  # STAGING DEPLOYMENT
+  # --------------------------------------------------
+  deploy-staging:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    environment:
+      name: staging
+
+    steps:
+      - name: Download deployment package
+        uses: actions/download-artifact@v4
+        with:
+          name: application-package
+          path: deployment-package
+
+      - name: Show downloaded package
+        run: |
+          echo "Downloaded deployment package:"
+          ls -la deployment-package
+
+      - name: Simulate staging deployment
+        run: |
+          echo "Deploying application to staging..."
+          echo "Deployment successful."
+
+  # --------------------------------------------------
+  # PRODUCTION DEPLOYMENT
+  # --------------------------------------------------
+  deploy-production:
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    environment:
+      name: production
+
+    steps:
+      - name: Download deployment package
+        uses: actions/download-artifact@v4
+        with:
+          name: application-package
+          path: deployment-package
+
+      - name: Show downloaded package
+        run: |
+          echo "Production deployment package:"
+          ls -la deployment-package
+
+      - name: Simulate production deployment
+        run: |
+          echo "Deploying application to production..."
+          echo "Production deployment successful."
