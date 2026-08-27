@@ -1,3 +1,4 @@
+
 name: CI
 
 on:
@@ -8,6 +9,10 @@ on:
   pull_request:
     branches:
       - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   APP_ENV: ${{ vars.APP_ENV }}
@@ -20,9 +25,6 @@ jobs:
   # --------------------------------------------------
   test:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout code
@@ -65,7 +67,7 @@ jobs:
 
       - name: Run only on feature branch
         if: github.ref != 'refs/heads/main'
-        run: echo "This is NOT the main branch"
+        run: echo "This is not the main branch"
 
       - name: Always run this step
         run: echo "This step always runs"
@@ -73,16 +75,25 @@ jobs:
       - name: Show GitHub ref
         run: echo "GITHUB_REF=$GITHUB_REF"
 
-      - name: Check secret availability
-        env:
-          DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
+      # --------------------------------------------------
+      # JOB SUMMARY
+      # --------------------------------------------------
+      - name: Create CI job summary
+        if: always()
         run: |
-          if [ -n "$DEMO_SECRET" ]; then
-            echo "Secret is available"
-          else
-            echo "Secret is missing"
-            exit 1
-          fi
+          echo "# 🚀 CI Job Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Application" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Name:** $APP_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Environment:** $APP_ENV" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## GitHub Information" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Repository:** $GITHUB_REPOSITORY" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Ref:** $GITHUB_REF" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Actor:** $GITHUB_ACTOR" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Result" >> "$GITHUB_STEP_SUMMARY"
+          echo "CI workflow completed." >> "$GITHUB_STEP_SUMMARY"
 
   # --------------------------------------------------
   # APPLICATION JOB
@@ -90,9 +101,6 @@ jobs:
   application:
     needs: test
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout code
@@ -116,9 +124,6 @@ jobs:
   # --------------------------------------------------
   condition-practice:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
 
     steps:
       - name: Always available step
@@ -145,9 +150,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-
     steps:
       - name: Job started
         run: echo "The entire job is running"
@@ -163,115 +165,3 @@ jobs:
     with:
       python-version: "3.13"
       environment: "testing"
-
-  # --------------------------------------------------
-  # BUILD JOB
-  # --------------------------------------------------
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create deployment package
-        run: |
-          mkdir deployment-package
-          cp app.py deployment-package/
-          cp requirements.txt deployment-package/
-          cp README.md deployment-package/
-
-      - name: List deployment package
-        run: |
-          echo "Deployment package contents:"
-          ls -la deployment-package
-
-      - name: Upload deployment package
-        uses: actions/upload-artifact@v4
-        with:
-          name: application-package
-          path: deployment-package/
-
-  # --------------------------------------------------
-  # STAGING DEPLOYMENT
-  # --------------------------------------------------
-  deploy-staging:
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
-    environment:
-      name: staging
-
-    steps:
-      - name: Download deployment package
-        uses: actions/download-artifact@v4
-        with:
-          name: application-package
-          path: deployment-package
-
-      - name: Show downloaded package
-        run: |
-          echo "Downloaded deployment package:"
-          ls -la deployment-package
-
-      - name: Simulate staging deployment
-        run: |
-          echo "Deploying application to staging..."
-          echo "Deployment successful."
-
-  # --------------------------------------------------
-  # STAGING VERIFICATION
-  # --------------------------------------------------
-  verify-staging:
-    needs: deploy-staging
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Verify staging deployment
-        run: |
-          echo "Checking staging deployment..."
-          echo "Application is responding correctly."
-          echo "Staging verification successful."
-
-  # --------------------------------------------------
-  # PRODUCTION DEPLOYMENT
-  # --------------------------------------------------
-  deploy-production:
-    needs: verify-staging
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
-    environment:
-      name: production
-
-    steps:
-      - name: Download deployment package
-        uses: actions/download-artifact@v4
-        with:
-          name: application-package
-          path: deployment-package
-
-      - name: Show downloaded package
-        run: |
-          echo "Production deployment package:"
-          ls -la deployment-package
-
-      - name: Simulate production deployment
-        run: |
-          echo "Deploying application to production..."
-          echo "Production deployment successful."
