@@ -1,3 +1,2 @@
-# Git Learning Project
+Branch protection practice
 
-This project is being used to learn Git, GitHub and GitHub Actions practically.
