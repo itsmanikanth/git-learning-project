@@ -201,7 +201,8 @@ jobs:
 
     steps:
       - name: Show deployment ref
-        run: echo "Deployment ref: $GITHUB_REF"
+        run: |
+          echo "Deployment ref: $GITHUB_REF"
 
       - name: Simulate production deployment
         run: |
