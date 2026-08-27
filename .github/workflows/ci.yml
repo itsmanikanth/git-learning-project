@@ -1,4 +1,4 @@
-```yaml
+
 name: CI
 
 on:
@@ -154,4 +154,3 @@ jobs:
     with:
       python-version: "3.13"
       environment: "testing"
-```
