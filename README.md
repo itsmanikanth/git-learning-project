@@ -1,3 +1,2 @@
-# Git Learning Project
+Concurrency cancellation practice
 
-This project is being used to learn Git, GitHub and GitHub Actions practically.
