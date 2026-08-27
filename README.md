@@ -1,3 +1,2 @@
-# Git Learning Project
+Concurrency queue practice
 
-This project is being used to learn Git, GitHub and GitHub Actions practically.
