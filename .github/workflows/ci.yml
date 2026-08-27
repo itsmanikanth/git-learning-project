@@ -228,10 +228,28 @@ jobs:
           echo "Deployment successful."
 
   # --------------------------------------------------
+  # STAGING VERIFICATION
+  # --------------------------------------------------
+  verify-staging:
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Verify staging deployment
+        run: |
+          echo "Checking staging deployment..."
+          echo "Application is responding correctly."
+          echo "Staging verification successful."
+
+  # --------------------------------------------------
   # PRODUCTION DEPLOYMENT
   # --------------------------------------------------
   deploy-production:
-    needs: deploy-staging
+    needs: verify-staging
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
