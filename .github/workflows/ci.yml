@@ -114,6 +114,44 @@ jobs:
 
 
   # ==================================================
+  # SELF-HOSTED RUNNER LABEL PRACTICE
+  # ==================================================
+  self-hosted-label-practice:
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+
+      - name: Display runner information
+        shell: powershell
+        run: |
+          Write-Host "Self-hosted runner selected."
+          Write-Host "Runner name: $env:RUNNER_NAME"
+          Write-Host "Operating system: $env:RUNNER_OS"
+          Write-Host "Architecture: $env:RUNNER_ARCH"
+
+      - name: Display machine information
+        shell: powershell
+        run: |
+          Write-Host "Computer name:"
+          $env:COMPUTERNAME
+
+          Write-Host "PowerShell version:"
+          $PSVersionTable.PSVersion
+
+      - name: Check Python
+        shell: powershell
+        run: |
+          python --version
+
+      - name: Confirm execution location
+        shell: powershell
+        run: |
+          Write-Host "Current directory:"
+          Get-Location
+
+
+  # ==================================================
   # MATRIX TEST
   # ==================================================
   matrix-strategy-practice:
@@ -125,7 +163,6 @@ jobs:
       max-parallel: 2
 
       matrix:
-
         python-version:
           - "3.11"
           - "3.12"
@@ -343,4 +380,3 @@ jobs:
         run: |
           echo "Simulating release operation..."
           echo "A real release could create a tag or GitHub release."
-
