@@ -20,7 +20,7 @@ jobs:
   # TEST JOB
   # --------------------------------------------------
 
-  test
+  test:
 
     runs-on: ubuntu-latest
 
