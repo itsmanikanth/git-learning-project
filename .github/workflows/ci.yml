@@ -114,6 +114,75 @@ jobs:
 
 
   # ==================================================
+  # SELF-HOSTED RUNNER LABEL PRACTICE
+  # ==================================================
+  self-hosted-label-practice:
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+
+      - name: Display runner information
+        shell: powershell
+        run: |
+          Write-Host "Self-hosted runner selected."
+          Write-Host "Runner name: $env:RUNNER_NAME"
+          Write-Host "Operating system: $env:RUNNER_OS"
+          Write-Host "Architecture: $env:RUNNER_ARCH"
+
+      - name: Display machine information
+        shell: powershell
+        run: |
+          Write-Host "Computer name:"
+          $env:COMPUTERNAME
+
+          Write-Host "PowerShell version:"
+          $PSVersionTable.PSVersion
+
+      - name: Check Python
+        shell: powershell
+        run: |
+          python --version
+
+      - name: Confirm execution location
+        shell: powershell
+        run: |
+          Write-Host "Current directory:"
+          Get-Location
+
+
+  # ==================================================
+  # SELF-HOSTED RUNNER SECURITY PRACTICE
+  # ==================================================
+  self-hosted-security-practice:
+
+    # IMPORTANT:
+    # Only execute this job when code is pushed directly
+    # to the trusted main branch.
+    #
+    # Pull requests will NOT execute this self-hosted job.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+
+      - name: Confirm trusted execution
+        shell: powershell
+        run: |
+          Write-Host "Self-hosted security job is running."
+          Write-Host "Event: $env:GITHUB_EVENT_NAME"
+          Write-Host "Ref: $env:GITHUB_REF"
+          Write-Host "Runner: $env:RUNNER_NAME"
+
+      - name: Display security message
+        shell: powershell
+        run: |
+          Write-Host "This job only runs after code reaches main."
+          Write-Host "Untrusted pull requests do not execute this self-hosted job."
+
+
+  # ==================================================
   # MATRIX TEST
   # ==================================================
   matrix-strategy-practice:
@@ -125,7 +194,6 @@ jobs:
       max-parallel: 2
 
       matrix:
-
         python-version:
           - "3.11"
           - "3.12"
@@ -343,4 +411,3 @@ jobs:
         run: |
           echo "Simulating release operation..."
           echo "A real release could create a tag or GitHub release."
-
