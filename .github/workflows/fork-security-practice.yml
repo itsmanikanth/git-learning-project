@@ -1,0 +1,37 @@
+name: Fork PR Security Practice
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+
+  inspect-secret-availability:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Check secret availability
+        env:
+          DEMO_API_KEY: ${{ secrets.DEMO_API_KEY }}
+        run: |
+          if [ -n "$DEMO_API_KEY" ]; then
+            echo "Secret is available to this workflow."
+          else
+            echo "Secret is NOT available to this workflow."
+          fi
+
+      - name: Explain security model
+        run: |
+          echo "This workflow uses pull_request."
+          echo "Fork PRs must be treated as untrusted."
+          echo "Repository secrets are protected from fork workflows."
+
+      - name: Confirm no secret exposure
+        run: |
+          echo "Secret value is intentionally never printed."
