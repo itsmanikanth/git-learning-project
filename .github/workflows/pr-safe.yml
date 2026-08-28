@@ -1,0 +1,34 @@
+name: PR Security - Safe
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+
+  inspect-pr:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Display event information
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Base branch: ${{ github.base_ref }}"
+          echo "Head branch: ${{ github.head_ref }}"
+
+      - name: Display security model
+        run: |
+          echo "This workflow uses pull_request."
+          echo "PR code should be treated as untrusted."
+          echo "Only read access is requested."
+
+      - name: Demonstrate safe processing
+        run: |
+          echo "We can inspect PR metadata without executing untrusted code."
