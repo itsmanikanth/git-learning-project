@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - "feature/**"
 
   pull_request:
     branches:
@@ -125,7 +126,6 @@ jobs:
       max-parallel: 2
 
       matrix:
-
         python-version:
           - "3.11"
           - "3.12"
@@ -344,3 +344,58 @@ jobs:
           echo "Simulating release operation..."
           echo "A real release could create a tag or GitHub release."
 
+
+  # ==================================================
+  # SELF-HOSTED RUNNER PRACTICE
+  # ==================================================
+  self-hosted-runner-practice:
+
+    # Only run this job for PUSH events.
+    # This prevents code from pull requests from automatically
+    # executing on our personal Windows machine.
+    if: github.event_name == 'push'
+
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+
+    steps:
+
+      - name: Display runner information
+        shell: powershell
+        run: |
+          Write-Host "========================================"
+          Write-Host "SELF-HOSTED RUNNER"
+          Write-Host "========================================"
+          Write-Host "Computer name: $env:COMPUTERNAME"
+          Write-Host "Operating system: $([System.Environment]::OSVersion.VersionString)"
+          Write-Host "PowerShell version: $($PSVersionTable.PSVersion)"
+          Write-Host "Runner name: $env:RUNNER_NAME"
+          Write-Host "Runner OS: $env:RUNNER_OS"
+          Write-Host "Runner architecture: $env:RUNNER_ARCH"
+          Write-Host "Workspace: $env:GITHUB_WORKSPACE"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Python
+        shell: powershell
+        run: |
+          python --version
+
+      - name: Run command on my computer
+        shell: powershell
+        run: |
+          Write-Host "This command is executing on my self-hosted Windows runner."
+          Write-Host "The machine is my own computer."
+
+      - name: Create runner summary
+        shell: powershell
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY "# Self-hosted Runner Report"
+          Add-Content $env:GITHUB_STEP_SUMMARY ""
+          Add-Content $env:GITHUB_STEP_SUMMARY "- Runner: $env:RUNNER_NAME"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- OS: $env:RUNNER_OS"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- Architecture: $env:RUNNER_ARCH"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- Computer: $env:COMPUTERNAME"
