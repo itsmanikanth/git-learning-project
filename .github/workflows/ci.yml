@@ -17,13 +17,6 @@ env:
   APP_ENV: ${{ vars.APP_ENV }}
   APP_NAME: ${{ vars.APP_NAME }}
 
-# ==================================================
-# DEFAULT / WORKFLOW-LEVEL PERMISSIONS
-# ==================================================
-# All jobs get READ access by default.
-# Individual jobs can request additional permissions
-# only when they actually need them.
-# ==================================================
 permissions:
   contents: read
 
@@ -114,6 +107,148 @@ jobs:
 
 
   # ==================================================
+  # SELF-HOSTED RUNNER LABEL PRACTICE
+  # ==================================================
+  self-hosted-label-practice:
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+
+      - name: Display runner information
+        shell: powershell
+        run: |
+          Write-Host "Self-hosted runner selected."
+          Write-Host "Runner name: $env:RUNNER_NAME"
+          Write-Host "Operating system: $env:RUNNER_OS"
+          Write-Host "Architecture: $env:RUNNER_ARCH"
+
+      - name: Display machine information
+        shell: powershell
+        run: |
+          Write-Host "Computer name:"
+          $env:COMPUTERNAME
+
+          Write-Host "PowerShell version:"
+          $PSVersionTable.PSVersion
+
+      - name: Check Python
+        shell: powershell
+        run: |
+          python --version
+
+      - name: Confirm execution location
+        shell: powershell
+        run: |
+          Write-Host "Current directory:"
+          Get-Location
+
+
+  # ==================================================
+  # SELF-HOSTED RUNNER SECURITY PRACTICE
+  # ==================================================
+  self-hosted-security-practice:
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+
+      - name: Confirm trusted execution
+        shell: powershell
+        run: |
+          Write-Host "Self-hosted security job is running."
+          Write-Host "Event: $env:GITHUB_EVENT_NAME"
+          Write-Host "Ref: $env:GITHUB_REF"
+          Write-Host "Runner: $env:RUNNER_NAME"
+
+      - name: Display security message
+        shell: powershell
+        run: |
+          Write-Host "This job only runs after code reaches main."
+          Write-Host "Untrusted pull requests do not execute this self-hosted job."
+
+
+  # ==================================================
+  # RUNNER LIFECYCLE PRACTICE
+  # ==================================================
+  runner-lifecycle-practice:
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+
+      - name: Display runner lifecycle
+        shell: powershell
+        run: |
+          Write-Host "Runner lifecycle demonstration"
+          Write-Host ""
+          Write-Host "Runner name: $env:RUNNER_NAME"
+          Write-Host "Runner OS: $env:RUNNER_OS"
+          Write-Host "Runner architecture: $env:RUNNER_ARCH"
+          Write-Host ""
+          Write-Host "This is a persistent self-hosted runner."
+          Write-Host "The same runner can receive future jobs."
+          Write-Host ""
+          Write-Host "An ephemeral runner would normally be used for one job"
+          Write-Host "and then automatically removed from GitHub."
+
+      - name: Confirm runner is persistent
+        shell: powershell
+        run: |
+          Write-Host "The runner remains registered after this job completes."
+
+
+  # ==================================================
+  # SCRIPT INJECTION SECURITY PRACTICE
+  # ==================================================
+  script-injection-practice:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Demonstrate safe handling of untrusted input
+        env:
+          USER_INPUT: ${{ github.event.head_commit.message }}
+        run: |
+          echo "Received input:"
+          echo "$USER_INPUT"
+
+      - name: Explain the security principle
+        run: |
+          echo "Untrusted GitHub event data should be treated as data."
+          echo "Pass it through environment variables instead of directly"
+          echo "embedding it into shell commands."
+
+
+  # ==================================================
+  # PULL REQUEST SECURITY PRACTICE
+  # ==================================================
+  pull-request-security-practice:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Display event information
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Base ref: ${{ github.base_ref }}"
+          echo "Head ref: ${{ github.head_ref }}"
+
+      - name: Explain pull request security
+        run: |
+          echo "pull_request is designed for pull request workflows."
+          echo "Untrusted PR code must be treated carefully."
+          echo "pull_request_target runs in the base repository context."
+          echo "Never blindly execute untrusted PR code with privileged access."
+
+
+  # ==================================================
   # MATRIX TEST
   # ==================================================
   matrix-strategy-practice:
@@ -125,7 +260,6 @@ jobs:
       max-parallel: 2
 
       matrix:
-
         python-version:
           - "3.11"
           - "3.12"
@@ -299,19 +433,6 @@ jobs:
   # ==================================================
   # RELEASE JOB
   # ==================================================
-  # IMPORTANT:
-  # This job deliberately receives WRITE permission.
-  #
-  # The workflow default is:
-  #
-  #     contents: read
-  #
-  # But this job overrides that with:
-  #
-  #     contents: write
-  #
-  # This demonstrates job-level permissions.
-  # ==================================================
   release:
 
     needs:
@@ -343,4 +464,3 @@ jobs:
         run: |
           echo "Simulating release operation..."
           echo "A real release could create a tag or GitHub release."
-
