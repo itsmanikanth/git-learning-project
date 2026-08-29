@@ -9,23 +9,64 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   APP_ENV: ${{ vars.APP_ENV }}
   APP_NAME: ${{ vars.APP_NAME }}
 
+permissions:
+  contents: read
+
 jobs:
 
-  # --------------------------------------------------
-  # TEST JOB
-  # --------------------------------------------------
-  test:
+  # ==================================================
+  # PREPARE
+  # ==================================================
+  prepare:
+
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
+    outputs:
+      version: ${{ steps.build_info.outputs.version }}
+      environment: ${{ steps.build_info.outputs.environment }}
+      application: ${{ steps.build_info.outputs.application }}
 
     steps:
-      - name: Checkout code
+
+      - name: Generate build information
+        id: build_info
+        run: |
+          VERSION="1.0.${GITHUB_RUN_NUMBER}"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "environment=$APP_ENV" >> "$GITHUB_OUTPUT"
+          echo "application=$APP_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Display generated information
+        run: |
+          echo "Application: ${{ steps.build_info.outputs.application }}"
+          echo "Environment: ${{ steps.build_info.outputs.environment }}"
+          echo "Version: ${{ steps.build_info.outputs.version }}"
+
+
+  # ==================================================
+  # TEST
+  # ==================================================
+  test:
+
+    needs: prepare
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      result: ${{ steps.test_result.outputs.result }}
+
+    steps:
+
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -34,244 +75,367 @@ jobs:
           python-version: "3.12"
 
       - name: Check Python version
-        run: python --version
+        run: |
+          python --version
 
       - name: Install dependencies
-        run: python -m pip install -r requirements.txt
+        run: |
+          python -m pip install -r requirements.txt
 
       - name: Run tests
-        run: python -m pytest
-
-      - name: Show configuration
         run: |
-          echo "Application: $APP_NAME"
-          echo "Environment: $APP_ENV"
+          python -m pytest
 
-      - name: Show GitHub information
+      - name: Generate test result
+        id: test_result
         run: |
-          echo "Repository: $GITHUB_REPOSITORY"
-          echo "Branch/ref: $GITHUB_REF"
-          echo "Commit: $GITHUB_SHA"
-          echo "Actor: $GITHUB_ACTOR"
+          echo "result=passed" >> "$GITHUB_OUTPUT"
 
-      - name: Check branch
+      - name: Display test result
         run: |
-          echo "Current ref: ${{ github.ref }}"
-          echo "Is main branch: ${{ github.ref == 'refs/heads/main' }}"
+          echo "Test result: ${{ steps.test_result.outputs.result }}"
 
-      - name: Run only on main
-        if: github.ref == 'refs/heads/main'
-        run: echo "This is the main branch"
-
-      - name: Run only on feature branch
-        if: github.ref != 'refs/heads/main'
-        run: echo "This is NOT the main branch"
-
-      - name: Always run this step
-        run: echo "This step always runs"
-
-      - name: Show GitHub ref
-        run: echo "GITHUB_REF=$GITHUB_REF"
-
-      - name: Check secret availability
-        env:
-          DEMO_SECRET: ${{ secrets.DEMO_SECRET }}
+      - name: Create CI summary
+        if: always()
         run: |
-          if [ -n "$DEMO_SECRET" ]; then
-            echo "Secret is available"
-          else
-            echo "Secret is missing"
-            exit 1
-          fi
+          echo "# CI Test Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Application: ${{ needs.prepare.outputs.application }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Environment: ${{ needs.prepare.outputs.environment }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version: ${{ needs.prepare.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Test result: ${{ steps.test_result.outputs.result }}" >> "$GITHUB_STEP_SUMMARY"
 
-  # --------------------------------------------------
-  # APPLICATION JOB
-  # --------------------------------------------------
-  application:
-    needs: test
-    runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
+  # ==================================================
+  # SELF-HOSTED RUNNER LABEL PRACTICE
+  # ==================================================
+  self-hosted-label-practice:
+
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+
+      - name: Display runner information
+        shell: powershell
+        run: |
+          Write-Host "Self-hosted runner selected."
+          Write-Host "Runner name: $env:RUNNER_NAME"
+          Write-Host "Operating system: $env:RUNNER_OS"
+          Write-Host "Architecture: $env:RUNNER_ARCH"
+
+      - name: Display machine information
+        shell: powershell
+        run: |
+          Write-Host "Computer name:"
+          $env:COMPUTERNAME
+
+          Write-Host "PowerShell version:"
+          $PSVersionTable.PSVersion
+
+      - name: Check Python
+        shell: powershell
+        run: |
+          python --version
+
+      - name: Confirm execution location
+        shell: powershell
+        run: |
+          Write-Host "Current directory:"
+          Get-Location
+
+
+  # ==================================================
+  # SELF-HOSTED RUNNER SECURITY PRACTICE
+  # ==================================================
+  self-hosted-security-practice:
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+
+      - name: Confirm trusted execution
+        shell: powershell
+        run: |
+          Write-Host "Self-hosted security job is running."
+          Write-Host "Event: $env:GITHUB_EVENT_NAME"
+          Write-Host "Ref: $env:GITHUB_REF"
+          Write-Host "Runner: $env:RUNNER_NAME"
+
+      - name: Display security message
+        shell: powershell
+        run: |
+          Write-Host "This job only runs after code reaches main."
+          Write-Host "Untrusted pull requests do not execute this self-hosted job."
+
+
+  # ==================================================
+  # RUNNER LIFECYCLE PRACTICE
+  # ==================================================
+  runner-lifecycle-practice:
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+
+      - name: Display runner lifecycle
+        shell: powershell
+        run: |
+          Write-Host "Runner lifecycle demonstration"
+          Write-Host ""
+          Write-Host "Runner name: $env:RUNNER_NAME"
+          Write-Host "Runner OS: $env:RUNNER_OS"
+          Write-Host "Runner architecture: $env:RUNNER_ARCH"
+          Write-Host ""
+          Write-Host "This is a persistent self-hosted runner."
+          Write-Host "The same runner can receive future jobs."
+          Write-Host ""
+          Write-Host "An ephemeral runner would normally be used for one job"
+          Write-Host "and then automatically removed from GitHub."
+
+      - name: Confirm runner is persistent
+        shell: powershell
+        run: |
+          Write-Host "The runner remains registered after this job completes."
+
+
+  # ==================================================
+  # SCRIPT INJECTION SECURITY PRACTICE
+  # ==================================================
+  script-injection-practice:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Demonstrate safe handling of untrusted input
+        env:
+          USER_INPUT: ${{ github.event.head_commit.message }}
+        run: |
+          echo "Received input:"
+          echo "$USER_INPUT"
+
+      - name: Explain the security principle
+        run: |
+          echo "Untrusted GitHub event data should be treated as data."
+          echo "Pass it through environment variables instead of directly"
+          echo "embedding it into shell commands."
+
+
+  # ==================================================
+  # MATRIX TEST
+  # ==================================================
+  matrix-strategy-practice:
+
+    strategy:
+
+      fail-fast: false
+
+      max-parallel: 2
+
+      matrix:
+        python-version:
+          - "3.11"
+          - "3.12"
+
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+        include:
+
+          - python-version: "3.13"
+            os: ubuntu-latest
+            experimental: true
+
+        exclude:
+
+          - python-version: "3.11"
+            os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Display matrix combination
+        shell: bash
+        run: |
+          echo "Operating system: ${{ matrix.os }}"
+          echo "Python version: ${{ matrix.python-version }}"
+          echo "Experimental: ${{ matrix.experimental }}"
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
-      - name: Run application
-        run: python app.py
-
-      - name: Show configuration
+      - name: Check Python version
+        shell: bash
         run: |
-          echo "Application: $APP_NAME"
-          echo "Environment: $APP_ENV"
+          python --version
 
-  # --------------------------------------------------
-  # CONDITION PRACTICE
-  # --------------------------------------------------
-  condition-practice:
+      - name: Run matrix test
+        shell: bash
+        run: |
+          echo "Testing Python ${{ matrix.python-version }}"
+          echo "Operating system: ${{ matrix.os }}"
+
+      - name: Handle experimental configuration
+        if: matrix.experimental == true
+        shell: bash
+        run: |
+          echo "Experimental configuration detected."
+
+      - name: Handle normal configuration
+        if: matrix.experimental != true
+        shell: bash
+        run: |
+          echo "Normal configuration detected."
+
+
+  # ==================================================
+  # APPLICATION
+  # ==================================================
+  application:
+
+    needs:
+      - prepare
+      - test
+
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Display previous job outputs
+        run: |
+          echo "Application: ${{ needs.prepare.outputs.application }}"
+          echo "Environment: ${{ needs.prepare.outputs.environment }}"
+          echo "Version: ${{ needs.prepare.outputs.version }}"
+          echo "Test result: ${{ needs.test.outputs.result }}"
+
+      - name: Verify test result
+        if: needs.test.outputs.result == 'passed'
+        run: |
+          echo "Tests passed. Application can proceed."
+
+      - name: Run application
+        run: |
+          python app.py
+
+
+  # ==================================================
+  # CONDITION PRACTICE
+  # ==================================================
+  condition-practice:
+
+    runs-on: ubuntu-latest
 
     steps:
+
       - name: Always available step
-        run: echo "This step always runs"
+        run: |
+          echo "This step always runs"
 
       - name: Show ref
-        run: echo "GITHUB_REF=$GITHUB_REF"
+        run: |
+          echo "GITHUB_REF=$GITHUB_REF"
 
       - name: Main branch step
         if: github.ref == 'refs/heads/main'
-        run: echo "This is the main branch"
+        run: |
+          echo "This is the main branch"
 
       - name: Feature branch step
         if: github.ref != 'refs/heads/main'
-        run: echo "This is NOT the main branch"
+        run: |
+          echo "This is NOT the main branch"
 
-      - name: Another normal step
-        run: echo "Another normal step"
 
-  # --------------------------------------------------
-  # JOB CONDITION PRACTICE
-  # --------------------------------------------------
+  # ==================================================
+  # JOB CONDITION
+  # ==================================================
   job-condition-practice:
+
     if: github.ref == 'refs/heads/main'
+
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-
     steps:
+
       - name: Job started
-        run: echo "The entire job is running"
+        run: |
+          echo "The entire job is running"
 
       - name: Second step
-        run: echo "Second step is running"
+        run: |
+          echo "Second step is running"
 
-  # --------------------------------------------------
+
+  # ==================================================
   # REUSABLE WORKFLOW
-  # --------------------------------------------------
+  # ==================================================
   reusable-test:
+
     uses: ./.github/workflows/reusable-test.yml
+
     with:
       python-version: "3.13"
       environment: "testing"
 
-  # --------------------------------------------------
-  # BUILD JOB
-  # --------------------------------------------------
-  build:
-    needs: test
+
+  # ==================================================
+  # SECURITY JOB
+  # ==================================================
+  security-check:
+
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-
     steps:
-      - name: Checkout code
+
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create deployment package
+      - name: Security check
         run: |
-          mkdir deployment-package
-          cp app.py deployment-package/
-          cp requirements.txt deployment-package/
-          cp README.md deployment-package/
+          echo "Security job has READ access."
+          echo "It does not require repository WRITE access."
 
-      - name: List deployment package
-        run: |
-          echo "Deployment package contents:"
-          ls -la deployment-package
 
-      - name: Upload deployment package
-        uses: actions/upload-artifact@v4
-        with:
-          name: application-package
-          path: deployment-package/
+  # ==================================================
+  # RELEASE JOB
+  # ==================================================
+  release:
 
-  # --------------------------------------------------
-  # STAGING DEPLOYMENT
-  # --------------------------------------------------
-  deploy-staging:
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - test
 
     permissions:
-      contents: read
+      contents: write
 
-    environment:
-      name: staging
-
-    steps:
-      - name: Download deployment package
-        uses: actions/download-artifact@v4
-        with:
-          name: application-package
-          path: deployment-package
-
-      - name: Show downloaded package
-        run: |
-          echo "Downloaded deployment package:"
-          ls -la deployment-package
-
-      - name: Simulate staging deployment
-        run: |
-          echo "Deploying application to staging..."
-          echo "Deployment successful."
-
-  # --------------------------------------------------
-  # STAGING VERIFICATION
-  # --------------------------------------------------
-  verify-staging:
-    needs: deploy-staging
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-
     steps:
-      - name: Verify staging deployment
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Display release permission
         run: |
-          echo "Checking staging deployment..."
-          echo "Application is responding correctly."
-          echo "Staging verification successful."
+          echo "Release job has contents: write permission."
+          echo "This job is the only job in this workflow that requires WRITE access."
 
-  # --------------------------------------------------
-  # PRODUCTION DEPLOYMENT
-  # --------------------------------------------------
-  deploy-production:
-    needs: verify-staging
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
-    environment:
-      name: production
-
-    steps:
-      - name: Download deployment package
-        uses: actions/download-artifact@v4
-        with:
-          name: application-package
-          path: deployment-package
-
-      - name: Show downloaded package
+      - name: Prepare release information
         run: |
-          echo "Production deployment package:"
-          ls -la deployment-package
+          echo "Application: ${{ needs.prepare.outputs.application }}"
+          echo "Version: ${{ needs.prepare.outputs.version }}"
+          echo "Test result: ${{ needs.test.outputs.result }}"
 
-      - name: Simulate production deployment
+      - name: Simulate release
         run: |
-          echo "Deploying application to production..."
-          echo "Production deployment successful."
+          echo "Simulating release operation..."
+          echo "A real release could create a tag or GitHub release."
